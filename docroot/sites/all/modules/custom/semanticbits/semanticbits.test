@@ -1,0 +1,69 @@
+<?php
+
+class TodayModifiedPagesBlockFunctionalTest extends DrupalWebTestCase {
+  public static function getInfo() {
+    return [
+      'name' => 'Test Today Modified Pages Block',
+      'description' => 'Test Today Modified Pages Block',
+      'group' => 'Semanticbits',
+    ];
+  }
+	
+  function setUp() {
+    parent::setUp('node', 'block', 'semanticbits');
+
+    // Create users and test node.
+    $this->admin_user = $this->drupalCreateUser(['administer nodes', 'administer blocks']);
+  }
+
+  /**
+   * Tests the recent comments block.
+   */
+  function testShowTodayModifiedPagesBlock() {
+    $this->drupalLogin($this->admin_user);
+		
+		$edit = [];
+    $edit['blocks[semanticbits_today_modified_pages][region]'] = 'sidebar_first';
+    $this->drupalPost('admin/structure/block', $edit, t('Save blocks'));
+    $this->assertText(t('The block settings have been updated.'), 'Block saved to first sidebar region.');
+		
+		// Add some test nodes.
+    $default_settings = ['uid' => $this->web_user->uid, 'type' => 'article'];
+    $default_settings['title'] = 'Page 01';
+		$node1 = $this->drupalCreateNode($default_settings);
+		$default_settings['title'] = 'Page 02';
+    $node2 = $this->drupalCreateNode($default_settings);
+		$default_settings['title'] = 'Page 03';
+    $node3 = $this->drupalCreateNode($default_settings);
+    $node4 = $this->drupalCreateNode($default_settings);
+    $node5 = $this->drupalCreateNode($default_settings);
+    $node6 = $this->drupalCreateNode($default_settings);
+		
+		$this->drupalGet('');
+		// Test All Node are Found
+		$this->assertText($node1->title, 'Node found in block.');
+		$this->assertText($node2->title, 'Node found in block.');
+		$this->assertText($node3->title, 'Node found in block.');
+		
+		db_update('node')
+      ->fields(array(
+        'changed' => $node1->changed + 86400,
+      ))
+      ->condition('nid', $node1->nid)
+      ->execute();
+		
+		db_update('node')
+      ->fields(array(
+        'changed' => $node2->changed + 8700,
+      ))
+      ->condition('nid', $node2->nid)
+      ->execute();
+		
+		// Test All Node are Found
+		$this->assertNoText($node1->title, 'Node found in block.');
+		$this->assertNoText($node2->title, 'Node found in block.');
+		$this->assertText($node3->title, 'Node found in block.');
+		
+		
+	}
+}

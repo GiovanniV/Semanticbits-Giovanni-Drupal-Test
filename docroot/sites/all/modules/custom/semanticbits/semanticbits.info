@@ -1,0 +1,6 @@
+name = Show Current Date Modified Pages
+description = "Show Current Date Modified Pages"
+package = SemanticBits
+version = VERSION
+core = 7.x
+files[] = semanticbits.test
