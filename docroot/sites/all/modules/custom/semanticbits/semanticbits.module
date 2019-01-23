@@ -4,87 +4,84 @@
 module_load_include('inc', 'semanticbits', 'semanticbits.permissions');
 
 /**
- * Implements hook_menu().
- * 	- Hook used to create pages/menus
+ * Implementing hook_menu()
+ * Used to create Menu/Page
  */
 function semanticbits_menu() {
-	$menus = [];
-	
-	$menus['pages/today-modified'] = [
-		'title' => t('Today Modifed Pages'),
-		'description' => t('View Today Modifed Pages'),
-		'page callback' => '_get_today_modified_pages',
-		'access arguments' => ['view today modified pages'],
-	];
-	
-	return $menus;
-}
+  $menus = [];
+  
+  $menus['today-modified-pages'] = [
+    'title' => t('Showing Today Modified Pages'),
+    'description' => t('Showing Today Modified Pages'),
+    'page callback' => '_get_today_modified_pages',
+    'access arguments' => ['view today modified pages'],
+  ];
+  
+  return $menus;
+} 
 
 /**
- * Implements hook_block_info().
- * 	- Hook used to define block informition
+ * Implementing hook_block_info()
+ * Used to define Block Informations
  */
 function semanticbits_block_info() {
-	$blocks = [];
-	
-	// To show today modified pages
-  $blocks['today_modified_pages'] = array(
-    'info' => t('Today Modifield Pages'),
-    'cache' => DRUPAL_NO_CACHE,
-  );
+  $blocks = [];
   
-	return $blocks;
-}
+  $blocks['today_modified_pages'] = [
+    'info' => t('Showing Today Modified Pages'),
+    'cache' => DRUPAL_NO_CACHE,
+  ];
+  
+  return $blocks;
+} 
 
 /**
- * Implements hook_block_view().
- * 	- Hook used to define block informition
+ * Implementing hook_block_view()
+ * Return a rendered or renderable view of a block.
  */
 function semanticbits_block_view($delta = '') {
-	$block = array();
-	
-	switch ($delta) {
+
+  $block = array();
+  switch ($delta) {
     case 'today_modified_pages':
-      $block['subject'] = t('Today Modifield Pages');
-			$output = _get_today_modified_pages();
-			$output .= '<div style="text-align:right;">' . l('Full List', 'pages/today-modified', ['attributes' => ['style' => 'background-color:#d3d7d9;color:#000;padding:5px;']]) . '</div>';
-			$block['content'] = $output;
-			break;
-	}
-	
-	return $block;
-}
+      $block['subject'] = t('Showing Today Modified Pages');
+      $output = _get_today_modified_pages();
+      if(!empty($output))
+      $output .= l(t('Full View'), 'today-modified-pages');
+      $block['content'] = $output;
+      break;
+  }
+  
+  return $block;
+} 
 
 /**
- * Page Callback - pages/today-modified
- * Show today modified Pages
+ * Get Today Modified Pages
+ * Render in list view
+ * Rendering Each Pages teaser View
  */
 function _get_today_modified_pages() {
-	$beginOfDay = strtotime('today midnight');
-	$endOfDay = strtotime("tomorrow", $beginOfDay) - 1;
-	
-	$query = db_select('node', 'node')->extend('PagerDefault');
-	$query->condition('node.changed', [$beginOfDay, $endOfDay], 'BETWEEN');
-	$query->fields('node', ['nid']);
-	$query->orderBy('node.changed', 'DESC');
-	$query->limit(3);
-	$records = $query->execute();
-	
-	$header = ['Page', 'Operations'];
-	
-	$rows = [];
-	foreach($records as $record) {
-		$node = node_load($record->nid);
-		$view = node_view($node, 'teaser');
-		$rendered = drupal_render($view);
-		
-		$rows[] = [
-			$rendered
-		];
-	}
-	
-	$pager = theme('pager', ['quantity' => 5]);
-  $output = theme('item_list', ['items' => $rows]);
+  $todayStartTimestamp = strtotime("midnight", REQUEST_TIME);
+  $todayEndTimestamp   = strtotime("tomorrow", $todayStartTimestamp) - 1;
   
-	return $output . $pager;	
-}	
+  $query = db_select('node', 'page')->extend('PagerDefault');
+  $query->condition('page.changed', [$todayStartTimestamp, $todayEndTimestamp], 'BETWEEN');
+  $query->condition('page.status', 1);
+  $query->fields('page', ['nid']);
+  $query->limit(2);
+  $query->orderBy('page.changed', 'DESC');
+  $pages = $query->execute();
+  
+  $list_items = [];
+  foreach($pages as $page) {
+    $page = node_load($page->nid);
+    $page_view = node_view($page, 'teaser');
+    $list_items[] = drupal_render($page_view);
+  }
+  
+  $list_view = theme('item_list', ['items' => $list_items]);
+  $pager_view = theme('pager', ['quantity' => 5]);
+  
+  return $list_view . $pager_view;
+} 
+

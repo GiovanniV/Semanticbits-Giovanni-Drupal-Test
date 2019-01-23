@@ -46,9 +46,23 @@ class semanticbitsBlockTest extends DrupalWebTestCase {
     // Create Node
     $node_1 = $this->drupalCreateNode(array('type' => 'article', 'status' => 1));
     $node_2 = $this->drupalCreateNode(array('type' => 'article', 'status' => 0));
-    $node_3 = $this->drupalCreateNode(array('type' => 'article', 'changed' => 5));
-    $node_4 = $this->drupalCreateNode(array('type' => 'article', 'changed' => time()+86400));
+    $node_3 = $this->drupalCreateNode(array('type' => 'article'));
+    $node_4 = $this->drupalCreateNode(array('type' => 'article'));
     
+		db_update('node')
+      ->fields(array(
+        'changed' => time(),
+      ))
+      ->condition('nid', $node_3->nid)
+      ->execute();
+			
+		db_update('node')
+      ->fields(array(
+        'changed' => $node_4->changed + 86400,
+      ))
+      ->condition('nid', $node_4->nid)
+      ->execute();	
+		
     $this->drupalLogin($this->web_user);   
     $this->drupalGet('<front>');
     $this->assertText($node_1->title, 'Node found');
@@ -58,11 +72,11 @@ class semanticbitsBlockTest extends DrupalWebTestCase {
     
     $this->clickLink(t('Full View'));
     $this->assertResponse(200);
-    $this->assertText($node_1->title, 'Node found');
-    $this->assertNoText($node_2->title, 'Node not found');
-    $this->assertNoText($node_3->title, 'Node not found');
-    $this->assertNoText($node_4->title, 'Node not found');
     
+		$this->assertText($node_1->title, 'Node found');
+    $this->assertNoText($node_2->title, 'Node not found');
+    $this->assertText($node_3->title, 'Node found');
+    $this->assertNoText($node_4->title, 'Node not found');
   }
   
 }
@@ -98,10 +112,30 @@ class semanticbitsPageTest extends DrupalWebTestCase {
     
     // Create Node
     $node_1 = $this->drupalCreateNode(array('type' => 'article', 'status' => 1));
+    $node_2 = $this->drupalCreateNode(array('type' => 'article', 'status' => 0));
+    $node_3 = $this->drupalCreateNode(array('type' => 'article'));
+    $node_4 = $this->drupalCreateNode(array('type' => 'article'));
     
-    $this->drupalGet('pages/today-modified');
+		db_update('node')
+      ->fields(array(
+        'changed' => time(),
+      ))
+      ->condition('nid', $node_3->nid)
+      ->execute();
+			
+		db_update('node')
+      ->fields(array(
+        'changed' => $node_4->changed + 86400,
+      ))
+      ->condition('nid', $node_4->nid)
+      ->execute();	
+			
+    $this->drupalGet('today-modified-pages');
     $this->assertResponse(200);
       
     $this->assertText($node_1->title, 'Node found');
+    $this->assertNoText($node_2->title, 'Node not found');
+    $this->assertText($node_3->title, 'Node found');
+    $this->assertNoText($node_4->title, 'Node not found');
   }
 }
