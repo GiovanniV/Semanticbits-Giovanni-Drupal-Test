@@ -29,16 +29,10 @@ class TodayModifiedPagesBlockFunctionalTest extends DrupalWebTestCase {
 		
 		// Add some test nodes.
     $default_settings = ['uid' => $this->web_user->uid, 'type' => 'article'];
-    $default_settings['title'] = 'Page 01';
-		$node1 = $this->drupalCreateNode($default_settings);
-		$default_settings['title'] = 'Page 02';
-    $node2 = $this->drupalCreateNode($default_settings);
-		$default_settings['title'] = 'Page 03';
-    $node3 = $this->drupalCreateNode($default_settings);
-    $node4 = $this->drupalCreateNode($default_settings);
-    $node5 = $this->drupalCreateNode($default_settings);
-    $node6 = $this->drupalCreateNode($default_settings);
-		
+    $node1 = $this->drupalCreateNode($default_settings);
+		$node2 = $this->drupalCreateNode($default_settings);
+		$node3 = $this->drupalCreateNode($default_settings);
+    
 		$this->drupalGet('');
 		// Test All Node are Found
 		$this->assertText($node1->title, 'Node found in block.');
