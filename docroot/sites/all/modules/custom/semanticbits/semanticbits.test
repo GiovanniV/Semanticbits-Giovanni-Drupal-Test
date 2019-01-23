@@ -1,63 +1,107 @@
 <?php
 
-class TodayModifiedPagesBlockFunctionalTest extends DrupalWebTestCase {
-  public static function getInfo() {
-    return [
-      'name' => 'Test Today Modified Pages Block',
-      'description' => 'Test Today Modified Pages Block',
-      'group' => 'Semanticbits',
-    ];
-  }
-	
-  function setUp() {
-    parent::setUp('node', 'block', 'semanticbits');
+/**
+ * @file
+ * Tests for semanticbits module.
+ */
 
-    // Create users and test node.
-    $this->admin_user = $this->drupalCreateUser(['administer nodes', 'administer blocks']);
-  }
-
+/**
+ * Test semanticbits mail functionality.
+ */
+class semanticbitsBlockTest extends DrupalWebTestCase {
   /**
-   * Tests the recent comments block.
+   * {@inheritdoc}
    */
-  function testShowTodayModifiedPagesBlock() {
-    $this->drupalLogin($this->admin_user);
-		
-		$edit = [];
-    $edit['blocks[semanticbits_today_modified_pages][region]'] = 'sidebar_first';
-    $this->drupalPost('admin/structure/block', $edit, t('Save blocks'));
-    $this->assertText(t('The block settings have been updated.'), 'Block saved to first sidebar region.');
-		
-		// Add some test nodes.
-    $default_settings = ['uid' => $this->web_user->uid, 'type' => 'article'];
-    $node1 = $this->drupalCreateNode($default_settings);
-		$node2 = $this->drupalCreateNode($default_settings);
-		$node3 = $this->drupalCreateNode($default_settings);
+  public static function getInfo() {
+    return array(
+      'name' => 'Today Modifield Block Available Check',
+      'description' => 'Today Modifield Block Available Check',
+      'group' => 'Semanticbits',
+    );
+  }
+  
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
+    parent::setUp(['semanticbits', 'block']);
     
-		$this->drupalGet('');
-		// Test All Node are Found
-		$this->assertText($node1->title, 'Node found in block.');
-		$this->assertText($node2->title, 'Node found in block.');
-		$this->assertText($node3->title, 'Node found in block.');
-		
-		db_update('node')
-      ->fields(array(
-        'changed' => $node1->changed + 86400,
-      ))
-      ->condition('nid', $node1->nid)
-      ->execute();
-		
-		db_update('node')
-      ->fields(array(
-        'changed' => $node2->changed + 8700,
-      ))
-      ->condition('nid', $node2->nid)
-      ->execute();
-		
-		// Test All Node are Found
-		$this->assertNoText($node1->title, 'Node not found in block.');
-		$this->assertNoText($node2->title, 'Node not found in block.');
-		$this->assertText($node3->title, 'Node found in block.');
-		
-		
-	}
+    $this->admin_user = $this->drupalCreateUser(array('administer blocks'));
+    $this->web_user = $this->drupalCreateUser(array('view today modified pages'));
+    
+  }
+  
+  /**
+   * Make sure the Block Available.
+   */
+  public function testTodayModifiedPagesBlock() {
+    $this->drupalLogin($this->admin_user);
+    
+    $edit = array();
+    $edit['blocks[semanticbits_today_modified_pages][region]'] = 'content';
+    $this->drupalPost('admin/structure/block', $edit, t('Save blocks'));
+    $this->assertResponse(200);
+    $this->assertText(t('The block settings have been updated.'), 'Block successfully move to main content region.');
+    
+    // Create Node
+    $node_1 = $this->drupalCreateNode(array('type' => 'article', 'status' => 1));
+    $node_2 = $this->drupalCreateNode(array('type' => 'article', 'status' => 0));
+    $node_3 = $this->drupalCreateNode(array('type' => 'article', 'changed' => 5));
+    $node_4 = $this->drupalCreateNode(array('type' => 'article', 'changed' => time()+86400));
+    
+    $this->drupalLogin($this->web_user);   
+    $this->drupalGet('<front>');
+    $this->assertText($node_1->title, 'Node found');
+    $this->assertNoText($node_2->title, 'Node not found');
+    $this->assertNoText($node_3->title, 'Node not found');
+    $this->assertNoText($node_4->title, 'Node not found');
+    
+    $this->clickLink(t('Full View'));
+    $this->assertResponse(200);
+    $this->assertText($node_1->title, 'Node found');
+    $this->assertNoText($node_2->title, 'Node not found');
+    $this->assertNoText($node_3->title, 'Node not found');
+    $this->assertNoText($node_4->title, 'Node not found');
+    
+  }
+  
+}
+
+/**
+ * Test semanticbits mail functionality.
+ */
+class semanticbitsPageTest extends DrupalWebTestCase {
+  /**
+   * {@inheritdoc}
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Today Modifield Page Available Check',
+      'description' => 'Today Modifield Block Available Check',
+      'group' => 'Semanticbits',
+    );
+  }
+  
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
+    parent::setUp(array('semanticbits'));
+    $web_user = $this->drupalCreateUser(array('view today modified pages'));
+    $this->drupalLogin($web_user);
+  }
+  
+  /**
+   * Make sure Page Available.
+   */
+  public function testTodayModifiedPagesMenu() {
+    
+    // Create Node
+    $node_1 = $this->drupalCreateNode(array('type' => 'article', 'status' => 1));
+    
+    $this->drupalGet('pages/today-modified');
+    $this->assertResponse(200);
+      
+    $this->assertText($node_1->title, 'Node found');
+  }
 }
