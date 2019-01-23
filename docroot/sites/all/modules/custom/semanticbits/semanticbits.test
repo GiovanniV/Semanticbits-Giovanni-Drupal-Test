@@ -54,8 +54,8 @@ class TodayModifiedPagesBlockFunctionalTest extends DrupalWebTestCase {
       ->execute();
 		
 		// Test All Node are Found
-		$this->assertNoText($node1->title, 'Node found in block.');
-		$this->assertNoText($node2->title, 'Node found in block.');
+		$this->assertNoText($node1->title, 'Node not found in block.');
+		$this->assertNoText($node2->title, 'Node not found in block.');
 		$this->assertText($node3->title, 'Node found in block.');
 		
 		
