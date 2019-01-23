@@ -65,9 +65,9 @@ class semanticbitsBlockTest extends DrupalWebTestCase {
 		
     $this->drupalLogin($this->web_user);   
     $this->drupalGet('<front>');
-    $this->assertText($node_1->title, 'Node found');
+		$this->assertText($node_1->title, 'Node found');
     $this->assertNoText($node_2->title, 'Node not found');
-    $this->assertNoText($node_3->title, 'Node not found');
+    $this->assertText($node_3->title, 'Node found');
     $this->assertNoText($node_4->title, 'Node not found');
     
     $this->clickLink(t('Full View'));
@@ -113,8 +113,8 @@ class semanticbitsPageTest extends DrupalWebTestCase {
     // Create Node
     $node_1 = $this->drupalCreateNode(array('type' => 'article', 'status' => 1));
     $node_2 = $this->drupalCreateNode(array('type' => 'article', 'status' => 0));
-    $node_3 = $this->drupalCreateNode(array('type' => 'article'));
-    $node_4 = $this->drupalCreateNode(array('type' => 'article'));
+    $node_3 = $this->drupalCreateNode(array('type' => 'page'));
+    $node_4 = $this->drupalCreateNode(array('type' => 'page'));
     
 		db_update('node')
       ->fields(array(
